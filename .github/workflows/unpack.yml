@@ -1,0 +1,50 @@
+name: Auto Unpack with Local V2dat
+
+on:
+  schedule:
+    # 每天北京时间凌晨 2:30 自动运行一次 (UTC 时间 18:30)
+    - cron: '30 18 * * *'
+  workflow_dispatch: # 允许你在网页上随时手动点击按钮触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Environment Variables
+      run: |
+        echo "TAG_DATE=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
+
+    - name: Download Geosite.dat
+      run: |
+        echo "Downloading latest geosite.dat..."
+        curl -L -o geosite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
+
+    - name: Unpack Geosite using Local V2dat
+      run: |
+        # 1. 赋予仓库内自带的 v2dat 运行权限
+        chmod +x ./v2dat
+
+        # 2. 调用本地 v2dat 执行解包逻辑
+        echo "Unpacking geolocation-!cn..."
+        ./v2dat unpack geosite -f "geolocation-!cn" geosite.dat
+        
+        # 3. 规范命名
+        mv geosite_geolocation-!cn.txt geolocation-no-cn.txt
+        
+        # 4. 清理下载的临时大文件，保持仓库干净
+        rm -f geosite.dat
+
+    - name: Commit and Push txt file
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.name "actions@github.com"
+        
+        # 只将解包出来的纯文本文件提交并推送到你的仓库
+        git add geolocation-no-cn.txt
+        
+        git diff-index --quiet HEAD || git commit -m "自动解包更新: ${{ env.TAG_DATE }}"
+        git push
