@@ -27,20 +27,16 @@ jobs:
 
     - name: Unpack Geosite using Local V2dat
       run: |
-        # 1. 确保本地有 v2dat 文件
         if [ ! -f "./v2dat" ]; then
-          echo "❌ 错误：未在仓库根目录找到 v2dat 文件，请确认是否已上传！"
+          echo "❌ 错误：未在仓库根目录找到 v2dat 文件！"
           exit 1
         fi
 
-        # 2. 赋予可执行权限
         chmod +x ./v2dat
 
-        # 3. 执行解包（用单引号包裹防止 YAML 解析失败）
         echo "Unpacking geolocation-!cn..."
         ./v2dat unpack geosite -f 'geolocation-!cn' geosite.dat
         
-        # 4. 规范命名与清理
         if [ -f "geosite_geolocation-!cn.txt" ]; then
           mv "geosite_geolocation-!cn.txt" geolocation-no-cn.txt
           echo "✅ 解包成功！"
@@ -50,17 +46,22 @@ jobs:
         fi
         
         rm -f geosite.dat
+        
+        # ================= 核心修复：撤销对 v2dat 的权限更改，让 Git 恢复清白 =================
+        git restore v2dat
+        # ===================================================================================
 
     - name: Commit and Push txt file
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         
+        # 只关注我们的目标文本
         git add geolocation-no-cn.txt
         
-        # 检查是否有内容变更
+        # 检查是否真的有文件变动需要提交
         if git diff-index --quiet HEAD; then
-          echo "没有任何内容变更，跳过提交。"
+          echo "提示：今天解包出来的文本内容与仓库里现有的完全一致，无需重复提交。"
         else
           git commit -m "自动解包更新: ${{ env.TAG_DATE }}"
           git push
