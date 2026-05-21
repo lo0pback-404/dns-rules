@@ -88,3 +88,29 @@ jobs:
           git commit -m "全量规则同步更新: ${{ env.TAG_DATE }}"
           git push
         fi
+
+    - name: Generate Release Tag
+      id: tag
+      run: echo "release_tag=$(date +'%Y.%m.%d-%H%M')" >> $GITHUB_OUTPUT
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.tag.outputs.release_tag }}
+        name: "Database Auto-Update (${{ steps.tag.outputs.release_tag }})"
+        body: |
+          ## 📌 自动更新日志
+          - 数据源已同步至最新版本。
+        draft: false
+        prerelease: false
+        files: |
+          rules/ips/geoip_cn.txt
+          rules/domains/geosite_cn.txt
+          rules/domains/apple_cn.txt
+          rules/domains/google_cn.txt
+          rules/domains/direct_list.txt
+          rules/domains/proxy_list.txt
+          rules/domains/gfw_list.txt
+          rules/domains/geolocation-no-cn.txt
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
