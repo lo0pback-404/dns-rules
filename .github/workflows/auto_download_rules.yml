@@ -1,0 +1,90 @@
+name: Auto Download All IP/Domain Rules
+
+on:
+  schedule:
+    # 每天北京时间凌晨 2:30 自动运行一次 (UTC 时间 18:30)
+    - cron: '30 18 * * *'
+  workflow_dispatch: # 保持手动触发按钮
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Environment Variables
+      run: |
+        echo "TAG_DATE=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
+
+    - name: Prepare Architecture Directories
+      run: |
+        # 1. 创建标准化规则存放路径
+        mkdir -p ./rules/ips
+        mkdir -p ./rules/domains
+        mkdir -p ./tmp
+
+    - name: Download and Process Rules
+      run: |
+        # 2. 统一下载所有的纯文本规则文件
+        echo "📥 Downloading IP rules..."
+        curl --fail -sL -o ./rules/ips/geoip_cn.txt https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/cn.txt
+
+        echo "📥 Downloading Domain rules..."
+        curl --fail -sL -o ./rules/domains/geosite_cn.txt https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/china-list.txt
+        curl --fail -sL -o ./rules/domains/apple_cn.txt https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/apple-cn.txt
+        curl --fail -sL -o ./rules/domains/google_cn.txt https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/google-cn.txt
+        curl --fail -sL -o ./rules/domains/direct_list.txt https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/direct-list.txt
+        curl --fail -sL -o ./rules/domains/proxy_list.txt https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/proxy-list.txt
+        curl --fail -sL -o ./rules/domains/gfw_list.txt https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/gfw.txt
+
+        # 3. 下载大文件 geosite.dat 用于解包
+        echo "📥 Downloading geosite.dat for unpacking..."
+        curl --fail -sL -o ./tmp/geosite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
+
+    - name: Unpack Geosite using Repository Bin V2dat
+      run: |
+        # ======= 核心修改：检查并调用仓库里 bin 目录下的 v2dat =======
+        if [ ! -f "./bin/v2dat" ]; then
+          echo "❌ 错误：未在仓库的 bin 目录下找到 v2dat 文件，请确认上传路径！"
+          exit 1
+        fi
+
+        # 4. 赋予仓库内 bin/v2dat 运行权限
+        chmod +x ./bin/v2dat
+
+        # 5. 调用 ./bin/v2dat 执行解包逻辑
+        echo "📦 Unpacking geolocation-!cn..."
+        ./bin/v2dat unpack geosite -o ./tmp/ -f 'geolocation-!cn' ./tmp/geosite.dat
+        # ==========================================================
+        
+        # 6. 将解包出的文本移动到指定位置并规范命名
+        if [ -f "./tmp/geosite_geolocation-!cn.txt" ]; then
+          mv "./tmp/geosite_geolocation-!cn.txt" ./rules/domains/geolocation-no-cn.txt
+          echo "✅ 境外域名规则解包成功！"
+        else
+          echo "❌ 错误：未能生成解包文件！"
+          exit 1
+        fi
+        
+        # 7. 清理临时大文件
+        rm -rf ./tmp
+        
+        # 8. 撤销对 bin/v2dat 的权限更改，防止 Git 认为文件被 modified 导致报错
+        git restore bin/v2dat
+
+    - name: Commit and Push All Rules
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        
+        # 9. 显式指定只追踪 rules 文件夹的内容变更，绝不干扰 bin 目录
+        git add rules/
+        
+        if git diff-index --quiet HEAD; then
+          echo "提示：今天所有规则内容与仓库现有的完全一致，无需重复提交。"
+        else
+          git commit -m "全量规则同步更新: ${{ env.TAG_DATE }}"
+          git push
+        fi
