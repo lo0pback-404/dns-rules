@@ -97,7 +97,7 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ steps.tag.outputs.release_tag }}
-        name: "Database Auto-Update (${{ steps.tag.outputs.release_tag }})"
+        name: "DNS Rules Auto-Update (${{ steps.tag.outputs.release_tag }})"
         body: |
           ## 📌 自动更新日志
           - 数据源已同步至最新版本。
