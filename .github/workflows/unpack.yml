@@ -5,16 +5,15 @@ on:
     - cron: '30 18 * * *'
   workflow_dispatch:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+    # ================= 核心修复：直接使用原生支持 Node 24 的新版组件 =================
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4.2.2 # 显式指定具体小版本，或直接用官方后续更新
+    # ==============================================================================
 
     - name: Set up Environment Variables
       run: |
@@ -47,16 +46,14 @@ jobs:
         
         rm -f geosite.dat
         
-        # ================= 核心修复：撤销对 v2dat 的权限更改，让 Git 恢复清白 =================
+        # 撤销对 v2dat 的权限更改，让 Git 恢复清白
         git restore v2dat
-        # ===================================================================================
 
     - name: Commit and Push txt file
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         
-        # 只关注我们的目标文本
         git add geolocation-no-cn.txt
         
         # 检查是否真的有文件变动需要提交
