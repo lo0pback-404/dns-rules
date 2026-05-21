@@ -14,16 +14,16 @@
 ## 📌 规则快捷链接 (jsDelivr CDN)
 
 ### 1. IP 规则
-* **国内本地网段 (`geoip_cn.txt`)** `https://cdn.jsdelivr.net/gh/lo0pback-404/dns-rules@main/rules/ips/geoip_cn.txt`
+* **中国本地网段 (`geoip_cn.txt`)** `https://cdn.jsdelivr.net/gh/lo0pback-404/dns-rules@main/rules/ips/geoip_cn.txt`
 
 ### 2. 域名规则
-* **国内高频域名 (`geosite_cn.txt`)** `https://cdn.jsdelivr.net/gh/lo0pback-404/dns-rules@main/rules/domains/geosite_cn.txt`
-* **智能化本地加速 (Apple 服务) (`apple_cn.txt`)** `https://cdn.jsdelivr.net/gh/lo0pback-404/dns-rules@main/rules/domains/apple_cn.txt`
-* **联合办公基础生态 (Google 服务) (`google_cn.txt`)** `https://cdn.jsdelivr.net/gh/lo0pback-404/dns-rules@main/rules/domains/google_cn.txt`
-* **自定义直连列表 (`direct_list.txt`)** `https://cdn.jsdelivr.net/gh/lo0pback-404/dns-rules@main/rules/domains/direct_list.txt`
-* **专线分流列表 (`proxy_list.txt`)** `https://cdn.jsdelivr.net/gh/lo0pback-404/dns-rules@main/rules/domains/proxy_list.txt`
-* **特定未知区域域名 (`gfw_list.txt`)** `https://cdn.jsdelivr.net/gh/lo0pback-404/dns-rules@main/rules/domains/gfw_list.txt`
-* **全球境外域名聚合 (`geolocation-no-cn.txt`)** `https://cdn.jsdelivr.net/gh/lo0pback-404/dns-rules@main/rules/domains/geolocation-no-cn.txt`
+* **中国本地域名 (`geosite_cn.txt`)** `https://cdn.jsdelivr.net/gh/lo0pback-404/dns-rules@main/rules/domains/geosite_cn.txt`
+* **Apple 中国直连域名 (`apple_cn.txt`)** `https://cdn.jsdelivr.net/gh/lo0pback-404/dns-rules@main/rules/domains/apple_cn.txt`
+* **Google 中国直连域名 (`google_cn.txt`)** `https://cdn.jsdelivr.net/gh/lo0pback-404/dns-rules@main/rules/domains/google_cn.txt`
+* **直连域名 (`direct_list.txt`)** `https://cdn.jsdelivr.net/gh/lo0pback-404/dns-rules@main/rules/domains/direct_list.txt`
+* **代理域名 (`proxy_list.txt`)** `https://cdn.jsdelivr.net/gh/lo0pback-404/dns-rules@main/rules/domains/proxy_list.txt`
+* **GFWList 域名 (`gfw_list.txt`)** `https://cdn.jsdelivr.net/gh/lo0pback-404/dns-rules@main/rules/domains/gfw_list.txt`
+* **非中国域名 (`geolocation-no-cn.txt`)** `https://cdn.jsdelivr.net/gh/lo0pback-404/dns-rules@main/rules/domains/geolocation-no-cn.txt`
 
 ---
 
