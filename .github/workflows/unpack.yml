@@ -2,14 +2,11 @@ name: Auto Unpack with Local V2dat
 
 on:
   schedule:
-    # 每天北京时间凌晨 2:30 自动运行一次 (UTC 时间 18:30)
     - cron: '30 18 * * *'
-  workflow_dispatch: # 允许你在网页上随时手动点击按钮触发
+  workflow_dispatch:
 
-# ================= 核心修复：全局强制开启 Node.js 24 =================
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-# ====================================================================
 
 jobs:
   build:
@@ -30,17 +27,28 @@ jobs:
 
     - name: Unpack Geosite using Local V2dat
       run: |
-        # 1. 赋予仓库内自带的 v2dat 运行权限
+        # 1. 确保本地有 v2dat 文件
+        if [ ! -f "./v2dat" ]; then
+          echo "❌ 错误：未在仓库根目录找到 v2dat 文件，请确认是否已上传！"
+          exit 1
+        fi
+
+        # 2. 赋予可执行权限
         chmod +x ./v2dat
 
-        # 2. 调用本地 v2dat 执行解包逻辑
+        # 3. 执行解包（用单引号包裹防止 YAML 解析失败）
         echo "Unpacking geolocation-!cn..."
-        ./v2dat unpack geosite -f "geolocation-!cn" geosite.dat
+        ./v2dat unpack geosite -f 'geolocation-!cn' geosite.dat
         
-        # 3. 规范命名
-        mv geosite_geolocation-!cn.txt geolocation-no-cn.txt
+        # 4. 规范命名与清理
+        if [ -f "geosite_geolocation-!cn.txt" ]; then
+          mv "geosite_geolocation-!cn.txt" geolocation-no-cn.txt
+          echo "✅ 解包成功！"
+        else
+          echo "❌ 错误：未能生成解包文件！"
+          exit 1
+        fi
         
-        # 4. 清理下载的临时大文件，保持仓库干净
         rm -f geosite.dat
 
     - name: Commit and Push txt file
@@ -48,8 +56,12 @@ jobs:
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         
-        # 只将解包出来的纯文本文件提交并推送到你的仓库
         git add geolocation-no-cn.txt
         
-        git diff-index --quiet HEAD || git commit -m "自动解包更新: ${{ env.TAG_DATE }}"
-        git push
+        # 检查是否有内容变更
+        if git diff-index --quiet HEAD; then
+          echo "没有任何内容变更，跳过提交。"
+        else
+          git commit -m "自动解包更新: ${{ env.TAG_DATE }}"
+          git push
+        fi
